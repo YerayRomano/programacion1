@@ -1,5 +1,8 @@
 package control;
-
+import java.util.Scanner;
+import java.util.Date;
+import java.util.Random;
+import modelo.Intento;
 public class Ejercicios1 {
 
 	public static void main(String[] args) {
@@ -27,9 +30,24 @@ public class Ejercicios1 {
 		 */
 		// int numero = 7771;
 		// ej1.listarPrimos(100);
-		ej1.crearHebras(3);
+		//ej1.crearHebras(3);
+		//ej1.juegoNumero();
+		ej1.JugarAdivinar();
 	}
-
+	public void convierteAEnteros() {
+		String [] numeros ={"213","123","125","458","fefa"};
+		for(int i=0;i<numeros.length;i++) {
+			try {
+				Integer.parseInt(numeros [i]);
+			} catch (NumberFormatException e){
+				e.printStackTrace();
+			}
+		}
+	}
+	public void JugarAdivinar() {
+		int numa [] = this.validarNumeros();
+		this.juegoNumeros(numa);
+	}
 	public void crearHebras(int cuantas) {
 		for (int i = 0; i < cuantas; i++) {
 			Thread hebra = new Hebra();
@@ -93,34 +111,123 @@ public class Ejercicios1 {
 		}
 
 	}
-
-	public int sumaIntervalo(int menor, int mayor) {
-		int acum = 0;
-		for (int i = menor; i <= mayor; i++)
-			acum += i;
-		return acum;
-	}
-
-	public void mostrarLanzadas(int[] datos, int cuantasLanzadas) {
-		for (int i = 0; i < datos.length; i++)
-			/*
-			 * System.out.println("El número " + (i + 1) + " ha salido " +
-			 * datos[i] + " veces(" + ((datos[i]*100)/cuantasLanzadas) + " %)");
-			 */
-			System.out.printf("El numero %d aparece %d veces (%.2f)\n", (i + 1), datos[i],
-					(float) (datos[i] * 100) / cuantasLanzadas);
-	}
-
-	public int[] lanzadas(int numLanzadas) {
-		int[] resultado = new int[6];
-		int numero;
-		for (int i = 0; i < numLanzadas; i++) {
-			numero = lanzarDado();
-			resultado[numero - 1]++;
+	public int [] validarNumeros() {
+		Scanner lopuesto = new Scanner(System.in);
+		int primero;
+		int segundo;
+		int paso;
+		String entrada;
+		int medio;
+		int losnum [] = new int [2];
+		boolean correcto = false;
+		paso = 0;
+		primero = 0;
+		segundo = 0;
+		boolean enprueba = false;
+		String [] lasentradas = new String [2];
+		while(correcto == false) {
+			if(enprueba == false) {
+				System.out.println("pon el intrevalo con el fomrato min;max>");
+				entrada = lopuesto.nextLine();
+				lasentradas = entrada.split(";");
+				System.out.println(lasentradas [0]);
+				if(lasentradas.length == 2) {
+					enprueba = true;
+				}
+			}
+			switch(paso) {
+			case 0:
+				try {
+					primero = Integer.parseInt(lasentradas [0]);
+					if(primero != 0) {
+						paso++;
+					}
+				} catch(NumberFormatException e) {
+					paso = 0;
+					enprueba = false;
+					System.out.println("Error, el primer parametro no es un numero");
+				}
+			break;
+			case 1:
+				try {
+					segundo = Integer.parseInt(lasentradas [1]);
+					if(primero != 0) {
+						paso++;
+						if(primero == segundo) {
+							System.out.println("Error, los dos numeros son iguales");
+							paso = 0;
+							enprueba = false;
+						}
+						if(primero > segundo) {
+							medio = segundo;
+							segundo = primero;
+							primero = medio;
+						}
+						if(paso == 2) {
+							correcto = true;
+						}
+					}
+				} catch(NumberFormatException e) {
+					paso = 0;
+					enprueba = false;
+					System.out.println("Error, el segundo parametro no es un numero");
+				}
+			break;
+			}
 		}
-		return resultado;
+		losnum [0] = primero;
+		losnum [1] = segundo;
+		return losnum;
 	}
-
+	public void juegoNumeros(int [] numeros) {
+		System.out.printf("ok, jugaremos en el intervalo [%d,%d]\npuedes escribir salir para salir\n",numeros [0],numeros [1]);
+		Intento [] lodicho = new Intento [200];
+		String entrada = "";
+		if(numeros.length != 2) {
+			System.out.println("Error, array no valido");
+		}
+		Scanner lopuesto = new Scanner(System.in);
+		int objetivo = this.generarNumero(numeros [0], numeros [1]);
+		long principio_t = System.nanoTime();
+		long final_t;
+		long finaliza;
+		int intento = 0;
+		while(!entrada.equals("salir")) {
+			boolean correcto = true;
+			System.out.println("numero>");
+			entrada = lopuesto.nextLine();
+			int elintento = 0;
+			if(!entrada.equals("salir")) {
+				try {
+					elintento = Integer.parseInt(entrada);
+				} catch(NumberFormatException e) {
+					correcto = false;
+					System.out.println("Error, no es un numero");
+				}
+				if(correcto == true) {
+					if(intento < 199) {
+						intento = 0;
+					}
+					lodicho [intento] = new Intento(elintento,new Date());
+					intento++;
+					if(elintento == objetivo) {
+						System.out.println("felicidades, el numero era el "+elintento);
+						final_t = System.nanoTime();
+						finaliza = final_t - principio_t;
+						finaliza /= 1000000000;
+						System.out.println("has terminado en "+finaliza+" segundos");
+						break;
+					}
+					if(elintento < objetivo) {
+						System.out.println("error, el numero es demasiado corto, prueba uno mas alto");
+					}
+					if(elintento > objetivo) {
+						System.out.println("error, el numero es demasiado largo, prueba uno mas bajo");
+					}
+				}
+			}
+		}
+	}
 	public int lanzarDado() {
 
 		int valor = (int) (1 + Math.random() * 6);
@@ -128,7 +235,9 @@ public class Ejercicios1 {
 		return valor;
 
 	}
-
+	public int generarNumero(int min,int max) {
+		return min + new Random().nextInt(max-min);
+	}
 	public void listaNPrimerosEnteros(int n) {
 		for (int i = 0; i < n; i++)
 			System.out.println(i + 1);
