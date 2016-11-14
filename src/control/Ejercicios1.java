@@ -1,5 +1,9 @@
 package control;
 import java.util.Scanner;
+import javafx.scene.control.TextArea;
+import java.io.*;
+import java.awt.*;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import modelo.Intento;
@@ -45,8 +49,8 @@ public class Ejercicios1 {
 		}
 	}
 	public void JugarAdivinar() {
-		int numa [] = this.validarNumeros();
-		this.juegoNumeros(numa);
+		//int numa [] = this.validarNumeros();
+		//this.juegoNumeros(numa);
 	}
 	public void crearHebras(int cuantas) {
 		for (int i = 0; i < cuantas; i++) {
@@ -111,52 +115,39 @@ public class Ejercicios1 {
 		}
 
 	}
-	public int [] validarNumeros() {
-		Scanner lopuesto = new Scanner(System.in);
+	public String [] validarNumeros(int min,int max,TextArea lapantalla) {
 		int primero;
 		int segundo;
 		int paso;
-		String entrada;
 		int medio;
+		String [] errores = new String [18];
+		int cont = 0;
 		int losnum [] = new int [2];
 		boolean correcto = false;
 		paso = 0;
 		primero = 0;
 		segundo = 0;
-		boolean enprueba = false;
-		String [] lasentradas = new String [2];
 		while(correcto == false) {
-			if(enprueba == false) {
-				System.out.println("pon el intrevalo con el fomrato min;max>");
-				entrada = lopuesto.nextLine();
-				lasentradas = entrada.split(";");
-				System.out.println(lasentradas [0]);
-				if(lasentradas.length == 2) {
-					enprueba = true;
-				}
-			}
 			switch(paso) {
 			case 0:
-				try {
-					primero = Integer.parseInt(lasentradas [0]);
+					primero = min;
 					if(primero != 0) {
 						paso++;
+					} else {
+						//consola.setText(consola.getText()+"\nerror no has puesto un minimo");"Error, debes de poner un mínimo";
+						cont++;
+						break;
 					}
-				} catch(NumberFormatException e) {
-					paso = 0;
-					enprueba = false;
-					System.out.println("Error, el primer parametro no es un numero");
-				}
 			break;
 			case 1:
-				try {
-					segundo = Integer.parseInt(lasentradas [1]);
-					if(primero != 0) {
+					segundo = max;
+					if(segundo != 0) {
 						paso++;
 						if(primero == segundo) {
-							System.out.println("Error, los dos numeros son iguales");
+							errores [cont] = "Error, los dos numeros son iguales";
+							cont++;
 							paso = 0;
-							enprueba = false;
+							break;
 						}
 						if(primero > segundo) {
 							medio = segundo;
@@ -166,20 +157,22 @@ public class Ejercicios1 {
 						if(paso == 2) {
 							correcto = true;
 						}
+					} else {
+						errores [cont] = "Error, debes de poner un maximo";
 					}
-				} catch(NumberFormatException e) {
-					paso = 0;
-					enprueba = false;
-					System.out.println("Error, el segundo parametro no es un numero");
-				}
+					cont = 0;
 			break;
 			}
 		}
-		losnum [0] = primero;
-		losnum [1] = segundo;
-		return losnum;
+		if(cont != 0) {
+			return errores;
+		} else {
+			return null;
+		}
 	}
 	public void juegoNumeros(int [] numeros) {
+		String tunombre = "";
+		long puntua = 0;
 		System.out.printf("ok, jugaremos en el intervalo [%d,%d]\npuedes escribir salir para salir\n",numeros [0],numeros [1]);
 		Intento [] lodicho = new Intento [200];
 		String entrada = "";
@@ -216,6 +209,70 @@ public class Ejercicios1 {
 						finaliza = final_t - principio_t;
 						finaliza /= 1000000000;
 						System.out.println("has terminado en "+finaliza+" segundos");
+						boolean facil = false;
+						String lalinea;
+						String [] loscampos = new String [3];
+						FileReader fite;
+						BufferedReader buffa;
+						Intento [] losmejores;
+						String [] nombres;
+						int [] medio;
+						try {
+							fite = new FileReader("puntua.txt");
+							buffa = new BufferedReader(fite);
+							losmejores = new Intento [10];
+							nombres = new String [10];
+							medio = new int [2];
+							int cont = 0;
+							while(true) {
+								try {
+									lalinea = buffa.readLine();
+									loscampos = lalinea.split("@");
+									if(loscampos.length != 2) {
+										facil = true;
+										System.out.println("el fichero de puntauciones está corrupto, van a pagar justos por pecadores");
+										File loborrado = new File("puntua.txt");
+										loborrado.delete();
+									} else {
+										nombres [cont] = loscampos [0];
+										try {
+											medio [0] = Integer.parseInt(loscampos [1]);
+										} catch(NumberFormatException e) {
+											System.out.println("error, puntuacion no numerica, fichero corrupto, van a pagar justos por pecadores");
+											facil = true;
+											break;
+										}
+										
+									}
+									losmejores [cont++] = new Intento(medio [0],null);
+									if(cont == 10) {
+										break;
+									}
+								} catch (IOException e) {
+									break;
+								}
+								if(facil == false) {
+									Arrays.sort(losmejores);
+								}
+								puntua = finaliza;
+								boolean listo = true;
+								try {
+									buffa.close();
+									fite.close();
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+									listo = false;
+								}
+								if(listo == true) {
+									this.elRecord(tunombre,puntua);
+								}
+							}
+						} catch(FileNotFoundException e) {
+							System.out.println("Eres el primero en jugar, tienes el record asegurado");
+							this.elRecord(tunombre,puntua);
+							facil = true;
+						}
 						break;
 					}
 					if(elintento < objetivo) {
@@ -226,6 +283,27 @@ public class Ejercicios1 {
 					}
 				}
 			}
+		}
+	}
+	public void elRecord(String sunombre,long puntua) {
+		try {
+			Scanner lopuesto = new Scanner(System.in);
+			FileWriter lotuyo = new FileWriter("puntuta.txt");
+			String tunombre = "";
+			boolean valido = false;
+			while(valido == false) {
+				System.out.println("tu nombre>");
+				tunombre = lopuesto.nextLine();
+				if(tunombre.length() != 0) {
+					valido = true;
+				} else {
+					System.out.println("Error, no puedes poner un nombre vacio");
+				}
+			}
+			lotuyo.write(sunombre + "@"+puntua+"\n");
+			lotuyo.close();
+		} catch (IOException e) {
+			System.out.println("Error, no se pudo abrir el fichero para escritura");
 		}
 	}
 	public int lanzarDado() {

@@ -1,8 +1,9 @@
 package control;
-
+import application.Controlador;
 public class Hebra extends Thread {
 	public void run() {
-		for (int i = 0; i < Integer.MAX_VALUE; i++)
-			System.out.println(Thread.currentThread().getName() + " : " + i);
+			Controlador controlla = new Controlador();
+			System.out.println("maricon");
+			controlla.reproducir("reloj.wav",1);
 	}
 }
