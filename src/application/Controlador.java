@@ -124,12 +124,10 @@ public class Controlador {
 		if (elintento == this.objetivo) {
 			consola.setText(consola.getText() + "\nfelicidades, el numero era el " + elintento);
 			long finale = (System.nanoTime() - this.comienzo) / 1000000000;
-			if (this.clippy != null) {
-				clippy.close();
-			}
 			consola.setText(consola.getText() + "\nhas tardado " + finale + " segundo/s");
-			if (this.clippy != null) {
+			try {
 				clippy.close();
+			} catch (NullPointerException e) {
 			}
 			jugar.setDisable(false);
 			probar.setDisable(true);
